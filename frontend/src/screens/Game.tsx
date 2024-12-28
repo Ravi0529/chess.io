@@ -13,6 +13,7 @@ const Game: React.FC = () => {
     const socket = useSocket();
     const [chess, setChess] = useState(new Chess());
     const [board, setBoard] = useState(chess.board());
+    const [started, setStarted] = useState(false);
 
     useEffect(() => {
         if (!socket) {
@@ -24,18 +25,15 @@ const Game: React.FC = () => {
             console.log(message)
             switch (message.type) {
                 case INIT_GAME:
-                    setChess(new Chess());
+                    setStarted(true);
                     setBoard(chess.board());
-                    console.log("Game started");
                     break;
                 case MOVE:
                     const move = message.payload;
                     chess.move(move);
                     setBoard(chess.board());
-                    console.log("Move made");
                     break;
                 case GAME_OVER:
-                    console.log("Game over");
                     break;
             }
         }
@@ -47,12 +45,12 @@ const Game: React.FC = () => {
         <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gray-900 text-white p-4">
             <div className="flex-1 flex justify-center mb-6 md:mb-0">
                 <div className="rounded-lg">
-                    <ChessBoard socket={socket} board={board} />
+                    <ChessBoard chess={chess} setBoard={setBoard} socket={socket} board={board} />
                 </div>
             </div>
             <div className="flex-1 flex flex-col justify-center items-center md:items-start text-center md:text-left gap-6">
                 <div>
-                    <Button
+                    {!started && <Button
                         onClick={() => {
                             socket.send(JSON.stringify({
                                 type: INIT_GAME
@@ -60,7 +58,7 @@ const Game: React.FC = () => {
                         }}
                     >
                         Play
-                    </Button>
+                    </Button>}
                 </div>
             </div>
         </div>
