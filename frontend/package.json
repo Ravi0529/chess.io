@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "chess.js": "^1.0.0-beta.8",
+    "framer-motion": "^11.15.0",
     "react": "^18.3.1",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.1.1"
   },
