@@ -62,7 +62,7 @@ const ChessBoard: React.FC<{
                                         handleMove(from, squareRepresentation); // Handle the move
                                     }
                                 }}
-                                className={`w-12 h-12 flex items-center justify-center ${(i + j) % 2 === 0 ? 'bg-gray-500' : 'bg-gray-300'
+                                className={`w-12 h-12 flex items-center justify-center ${(i + j) % 2 === 0 ? 'bg-[#ebecd0]' : 'bg-[#779556]'
                                     } ${isOver ? 'bg-yellow-300' : ''}`}
                             >
                                 {square ? (
