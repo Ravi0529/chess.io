@@ -28,10 +28,7 @@ export class Game {
         }))
     }
 
-    makeMove(socket: WebSocket, move: {
-        from: string,
-        to: string,
-    }) {
+    makeMove(socket: WebSocket, move: { from: string; to: string }) {
         if (this.moveCount % 2 === 0 && socket !== this.player1) {
             return;
         }
@@ -39,41 +36,38 @@ export class Game {
         if (this.moveCount % 2 === 1 && socket !== this.player2) {
             return;
         }
-
+    
         try {
             this.board.move(move);
         }
         catch (e) {
             return;
         }
-
+    
+        // Broadcast the move to BOTH players (White and Black)
+        const moveDetails = {
+            type: MOVE,
+            payload: {
+                ...move,
+                color: this.moveCount % 2 === 0 ? "w" : "b"
+            },
+        };
+    
+        this.player1.send(JSON.stringify(moveDetails));
+        this.player2.send(JSON.stringify(moveDetails));
+    
+        // Check if the game is over
         if (this.board.isGameOver()) {
-            this.player1.send(JSON.stringify({
+            const winner = this.board.turn() === "w" ? "Black" : "White";
+    
+            const gameOverMessage = {
                 type: GAME_OVER,
-                payload: {
-                    winner: this.board.turn() === "w" ? "black" : "white",
-                }
-            }));
-            this.player2.send(JSON.stringify({
-                type: GAME_OVER,
-                payload: {
-                    winner: this.board.turn() === "w" ? "black" : "white",
-                }
-            }));
+                payload: { winner },
+            };
+    
+            this.player1.send(JSON.stringify(gameOverMessage));
+            this.player2.send(JSON.stringify(gameOverMessage));
             return;
-        }
-
-        if (this.moveCount % 2 === 0) {
-            this.player2.send(JSON.stringify({
-                type: MOVE,
-                payload: move,
-            }));
-        }
-        else {
-            this.player1.send(JSON.stringify({
-                type: MOVE,
-                payload: move,
-            }));
         }
         this.moveCount++;
     }
