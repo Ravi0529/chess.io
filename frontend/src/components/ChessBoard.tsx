@@ -14,9 +14,10 @@ type ChessBoardProps = {
     setBoard: any;
     chess: any;
     setPromotion: (from: string, to: string) => void;
+    checkSquare: String | null;
 };
 
-const ChessBoard: React.FC<ChessBoardProps> = ({ board, socket, setBoard, chess, setPromotion }) => {
+const ChessBoard: React.FC<ChessBoardProps> = ({ board, socket, setBoard, chess, setPromotion, checkSquare }) => {
     const [from, setFrom] = useState<null | Square>(null);
 
     return (
@@ -25,6 +26,8 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ board, socket, setBoard, chess,
                 <div key={i} className="flex">
                     {row.map((square, j) => {
                         const squareRepresentation = String.fromCharCode(97 + (j % 8)) + '' + (8 - i) as Square;
+
+                        const isKingInCheck = squareRepresentation === checkSquare;
 
                         // Drop functionality for drag-and-drop
                         const [{ isOver }, dropRef] = useDrop(() => ({
@@ -74,8 +77,9 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ board, socket, setBoard, chess,
                                         handleMove(from, squareRepresentation); // Handle the move
                                     }
                                 }}
-                                className={`w-12 h-12 flex items-center justify-center ${(i + j) % 2 === 0 ? 'bg-[#ebecd0]' : 'bg-[#779556]'
-                                    } ${isOver ? 'bg-yellow-300' : ''}`}
+                                className={`w-12 h-12 flex items-center justify-center ${
+                                    (i + j) % 2 === 0 ? 'bg-[#ebecd0]' : 'bg-[#779556]'
+                                } ${isKingInCheck ? 'bg-red-500' : ''} ${isOver ? 'bg-yellow-300' : ''}`}
                             >
                                 {square ? (
                                     <ChessPiece

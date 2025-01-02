@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import ChessBoard from "../components/ChessBoard";
 import Button from "../components/Button";
+import GameOver from "../components/GameOver";
 import { useSocket } from "../hooks/useSocket";
 import { Chess } from "chess.js";
 import jsPDF from "jspdf";
@@ -22,6 +23,9 @@ const Game: React.FC = () => {
     const [moves, setMoves] = useState<string[]>([]);
     const [promotion, setPromotion] = useState<{ from: string, to: string } | null>(null);
     const [promotionPiece, setPromotionPiece] = useState<string | null>(null);
+    const [gameOver, setGameOver] = useState(false);
+    const [winner, setWinner] = useState<string | null>(null);
+    const [checkSquare, setCheckSquare] = useState<string | null>(null);
 
     useEffect(() => {
         if (!socket) return;
@@ -45,7 +49,26 @@ const Game: React.FC = () => {
 
                     chess.move(move);
                     setBoard(chess.board());
+
+                    // Check for check or checkmate
+                    if (chess.isCheckmate()) {
+                        setGameOver(true);
+                        setWinner(chess.turn() === 'w' ? 'Black' : 'White');
+                    } else if (chess.isCheck()) {
+                        const kingSquare = chess.turn() === 'w'
+                            ? chess.board().flat().find(sq => sq?.type === 'k' && sq.color === 'w')?.square
+                            : chess.board().flat().find(sq => sq?.type === 'k' && sq.color === 'b')?.square;
+                        setCheckSquare(kingSquare || null);
+                    } else {
+                        setCheckSquare(null);
+                    }
                     break;
+
+                case GAME_OVER:
+                    setGameOver(true);
+                    setWinner(message.payload.winner);
+                    break;
+
             }
         };
     }, [socket]);
@@ -67,6 +90,7 @@ const Game: React.FC = () => {
             setBoard(chess.board());
             setPromotion(null);
             setPromotionPiece(null);
+            setCheckSquare(null);
         }
     }, [promotionPiece]);
 
@@ -140,30 +164,33 @@ const Game: React.FC = () => {
                         socket={socket}
                         board={board}
                         setPromotion={handlePromotion}
+                        checkSquare={checkSquare}
                     />
                 </div>
             </div>
 
+            {gameOver && <GameOver winner={winner} />}
+
             {promotion && (
                 <div className="promotion-box text-black bg-white p-4 rounded-lg shadow-lg">
-                <h3 className="text-lg font-semibold mb-4 text-center uppercase tracking-wide">
-                    Promote Pawn To:
-                </h3>
-                <div className="flex justify-center gap-4">
-                    {['q', 'r', 'b', 'n'].map((piece) => (
-                        <button
-                            key={piece}
-                            onClick={() => setPromotionPiece(piece)}
-                            className="p-2 bg-slate-300 hover:bg-slate-400 text-white rounded-md shadow-md transition duration-300"
-                        >
-                            <img
-                                src={`/${chess.turn() === 'w' ? 'w' : 'b'}${piece}.png`}
-                                className="w-9 h-9"
-                            />
-                        </button>
-                    ))}
+                    <h3 className="text-lg font-semibold mb-4 text-center uppercase tracking-wide">
+                        Promote Pawn To:
+                    </h3>
+                    <div className="flex justify-center gap-4">
+                        {['q', 'r', 'b', 'n'].map((piece) => (
+                            <button
+                                key={piece}
+                                onClick={() => setPromotionPiece(piece)}
+                                className="p-2 bg-slate-300 hover:bg-slate-400 text-white rounded-md shadow-md transition duration-300"
+                            >
+                                <img
+                                    src={`/${chess.turn() === 'w' ? 'w' : 'b'}${piece}.png`}
+                                    className="w-9 h-9"
+                                />
+                            </button>
+                        ))}
+                    </div>
                 </div>
-            </div>
             )}
 
             <div className="flex-1 flex flex-col justify-center items-center md:items-start text-center md:text-left gap-6">
