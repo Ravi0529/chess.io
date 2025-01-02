@@ -20,6 +20,8 @@ const Game: React.FC = () => {
     const [roomId, setRoomId] = useState<string | null>(null);
     const [isHost, setIsHost] = useState(false);
     const [moves, setMoves] = useState<string[]>([]);
+    const [promotion, setPromotion] = useState<{ from: string, to: string } | null>(null);
+    const [promotionPiece, setPromotionPiece] = useState<string | null>(null);
 
     useEffect(() => {
         if (!socket) return;
@@ -48,6 +50,25 @@ const Game: React.FC = () => {
         };
     }, [socket]);
 
+    useEffect(() => {
+        if (promotion && promotionPiece) {
+            const move = {
+                from: promotion.from,
+                to: promotion.to,
+                promotion: promotionPiece,
+            };
+            socket?.send(
+                JSON.stringify({
+                    type: MOVE,
+                    payload: { move },
+                })
+            );
+            chess.move(move);
+            setBoard(chess.board());
+            setPromotion(null);
+            setPromotionPiece(null);
+        }
+    }, [promotionPiece]);
 
     if (!socket) return <div>Connecting...</div>;
 
@@ -78,7 +99,7 @@ const Game: React.FC = () => {
 
     // Function to download moves as a PDF
     const downloadMovesAsPDF = () => {
-        const doc = new jsPDF(); // Create PDF document
+        const doc = new jsPDF();
 
         doc.setFontSize(16);
         doc.text("Chess Moves", 10, 10); // Title
@@ -86,33 +107,28 @@ const Game: React.FC = () => {
         // Table header
         doc.setFontSize(12);
         doc.text("No.   From   To", 10, 20);
-        doc.line(10, 22, 80, 22); // Underline
-
-        let y = 30; // Initial Y position for rows
-        const pageHeight = doc.internal.pageSize.height; // Get page height
-
+        doc.line(10, 22, 80, 22);
+        let y = 30;
+        const pageHeight = doc.internal.pageSize.height;
         moves.forEach((move, index) => {
-            const [from, to] = move.split("-"); // Split move into 'from' and 'to'
-
-            // Check if we need to create a new page
+            const [from, to] = move.split("-");
             if (y > pageHeight - 20) {
-                doc.addPage(); // Add a new page
-                y = 20; // Reset Y position for the new page
-
-                // Re-draw table header on the new page
+                doc.addPage();
+                y = 20;
                 doc.setFontSize(12);
                 doc.text("No.   From   To", 10, y);
-                doc.line(10, y + 2, 80, y + 2); // Underline
-                y += 10; // Move down for rows
+                doc.line(10, y + 2, 80, y + 2);
+                y += 10;
             }
-
-            doc.text(`${index + 1}.    ${from}     ${to}`, 10, y); // Write move
-            y += 10; // Increment Y position
+            doc.text(`${index + 1}.    ${from}     ${to}`, 10, y);
+            y += 10;
         });
-
-        doc.save("chess_moves.pdf"); // Save the PDF file
+        doc.save("chess_moves.pdf");
     };
 
+    const handlePromotion = (from: string, to: string) => {
+        setPromotion({ from, to });
+    };
 
     return (
         <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gray-900 text-white p-4">
@@ -123,9 +139,33 @@ const Game: React.FC = () => {
                         setBoard={setBoard}
                         socket={socket}
                         board={board}
+                        setPromotion={handlePromotion}
                     />
                 </div>
             </div>
+
+            {promotion && (
+                <div className="promotion-box text-black bg-white p-4 rounded-lg shadow-lg">
+                <h3 className="text-lg font-semibold mb-4 text-center uppercase tracking-wide">
+                    Promote Pawn To:
+                </h3>
+                <div className="flex justify-center gap-4">
+                    {['q', 'r', 'b', 'n'].map((piece) => (
+                        <button
+                            key={piece}
+                            onClick={() => setPromotionPiece(piece)}
+                            className="p-2 bg-slate-300 hover:bg-slate-400 text-white rounded-md shadow-md transition duration-300"
+                        >
+                            <img
+                                src={`/${chess.turn() === 'w' ? 'w' : 'b'}${piece}.png`}
+                                className="w-9 h-9"
+                            />
+                        </button>
+                    ))}
+                </div>
+            </div>
+            )}
+
             <div className="flex-1 flex flex-col justify-center items-center md:items-start text-center md:text-left gap-6">
                 <div>
                     {!started && !isHost && (
@@ -202,7 +242,7 @@ const Game: React.FC = () => {
                                 })}
                             </tbody>
                         </table>
-                        
+
                         <button
                             className="mt-4 px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-lg shadow-md transition duration-300"
                             onClick={downloadMovesAsPDF}

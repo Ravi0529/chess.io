@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import { INIT_GAME, MOVE, CREATE_ROOM, JOIN_ROOM } from "./messages";
+import { INIT_GAME, MOVE, CREATE_ROOM, JOIN_ROOM, PROMOTION } from "./messages";
 import { Game } from "./Game";
 
 interface Room {
@@ -69,21 +69,14 @@ export class GameManager {
                 }
 
                 if (message.type === MOVE) {
-                    if (!message.payload || !message.payload.move) {
-                        return;
-                    }
-
-                    const { from, to } = message.payload.move;
-                    if (!from || !to) {
-                        return;
-                    }
+                    const { from, to, promotion } = message.payload.move;
 
                     // Find the game
                     const game = this.games.find(game =>
                         game.player1 === socket || game.player2 === socket
                     );
                     if (game) {
-                        game.makeMove(socket, message.payload.move);
+                        game.makeMove(socket, { from, to, promotion });
                     }
                 }
 
@@ -148,14 +141,24 @@ export class GameManager {
                         return;
                     }
 
-                    const { from, to } = message.payload.move;
+                    const { from, to, promotion } = message.payload.move;
                     if (!from || !to) {
                         return;
                     }
 
                     const room = this.rooms.find(room => room.users.includes(socket));
                     if (room?.game) {
-                        room.game.makeMove(socket, message.payload.move);
+                        room.game.makeMove(socket, { from, to, promotion });
+                    }
+                }
+
+                if (message.type === PROMOTION) {
+                    const { from, to, promotion } = message.payload;
+                    const game = this.games.find(game =>
+                        game.player1 === socket || game.player2 === socket
+                    );
+                    if (game) {
+                        game.makeMove(socket, { from, to, promotion });
                     }
                 }
             } catch (err) {

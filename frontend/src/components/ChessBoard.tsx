@@ -4,7 +4,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import { motion } from 'framer-motion';
 import { MOVE } from '../screens/Game';
 
-const ChessBoard: React.FC<{
+type ChessBoardProps = {
     board: ({
         square: Square;
         type: PieceSymbol;
@@ -13,7 +13,10 @@ const ChessBoard: React.FC<{
     socket: WebSocket | null;
     setBoard: any;
     chess: any;
-}> = ({ board, socket, setBoard, chess }) => {
+    setPromotion: (from: string, to: string) => void;
+};
+
+const ChessBoard: React.FC<ChessBoardProps> = ({ board, socket, setBoard, chess, setPromotion }) => {
     const [from, setFrom] = useState<null | Square>(null);
 
     return (
@@ -36,18 +39,27 @@ const ChessBoard: React.FC<{
 
                         // Handle moves (shared logic for both drag and click)
                         const handleMove = (fromSquare: Square, toSquare: Square) => {
-                            if (fromSquare && toSquare) {
-                                socket?.send(
-                                    JSON.stringify({
-                                        type: MOVE,
-                                        payload: {
-                                            move: { from: fromSquare, to: toSquare },
-                                        },
-                                    })
-                                );
-                                chess.move({ from: fromSquare, to: toSquare });
-                                setBoard(chess.board());
-                                setFrom(null); // Reset selection
+                            const moves = chess.moves({ square: fromSquare, verbose: true });
+                            const isPromotion = moves.some(
+                                (move: any) => move.flags.includes('p') && move.to === toSquare
+                            );
+
+                            if (isPromotion) {
+                                setPromotion(fromSquare, toSquare); // Trigger promotion selection
+                            } else {
+                                if (fromSquare && toSquare) {
+                                    socket?.send(
+                                        JSON.stringify({
+                                            type: MOVE,
+                                            payload: {
+                                                move: { from: fromSquare, to: toSquare },
+                                            },
+                                        })
+                                    );
+                                    chess.move({ from: fromSquare, to: toSquare });
+                                    setBoard(chess.board());
+                                    setFrom(null); // Reset selection
+                                }
                             }
                         };
 
