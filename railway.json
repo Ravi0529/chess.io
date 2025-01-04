@@ -1,9 +1,9 @@
 {
     "root": "./backend",
     "build": {
-        "command": "cd backend && npm ci && npm install && npm run build"
+        "command": "npm install && npm run build"
     },
     "start": {
-        "command": "cd backend && npm run start"
+        "command": "npm run start"
     }
 }
