@@ -1,7 +1,12 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { GameManager } from './GameManager';
+import dotenv from 'dotenv';
 
-const wss = new WebSocketServer({ port: 8080 });
+dotenv.config({
+  path: './.env'
+});
+
+const wss = new WebSocketServer({ port: Number(process.env.PORT) || 3000 });
 
 const gameManager = new GameManager();
 
