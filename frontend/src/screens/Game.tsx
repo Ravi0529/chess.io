@@ -13,7 +13,6 @@ export const CREATE_ROOM = "create_room";
 export const JOIN_ROOM = "join_room";
 
 const Game: React.FC = () => {
-
     const socket = useSocket();
     const [chess, setChess] = useState(new Chess());
     const [board, setBoard] = useState(chess.board());
@@ -71,7 +70,6 @@ const Game: React.FC = () => {
                     setGameOver(true);
                     setWinner(message.payload.winner);
                     break;
-
             }
         };
     }, [socket]);
@@ -158,9 +156,10 @@ const Game: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gray-900 text-white p-4">
-            <div className="flex-1 flex justify-center mb-6 md:mb-0">
-                <div className="rounded-lg">
+        <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gray-900 text-white p-4 gap-4">
+            {/* Chessboard Section */}
+            <div className="w-full md:w-[80%] max-w-[800px] flex justify-center">
+                <div className="rounded-lg bg-gray-800 p-3">
                     <ChessBoard
                         chess={chess}
                         setBoard={setBoard}
@@ -173,33 +172,31 @@ const Game: React.FC = () => {
                 </div>
             </div>
 
-            {gameOver && <GameOver winner={winner} />}
-
             {promotion && (
-                <div className="promotion-box text-black bg-white p-4 rounded-lg shadow-lg">
-                    <h3 className="text-lg font-semibold mb-4 text-center uppercase tracking-wide">
-                        Promote Pawn To:
-                    </h3>
+                <dialog open className={`promotion-box ${myColor === 'w' ? 'bg-slate-700' : 'bg-gray-400'} rounded-lg shadow-lg fixed inset-40 flex items-center justify-center p-2`}>
                     <div className="flex justify-center gap-4">
                         {['q', 'r', 'b', 'n'].map((piece) => (
                             <button
                                 key={piece}
                                 onClick={() => setPromotionPiece(piece)}
-                                className="p-2 bg-slate-300 hover:bg-slate-400 text-white rounded-md shadow-md transition duration-300"
+                                className="hover:bg-gray-500 rounded-md shadow-md transition duration-300"
                             >
                                 <img
                                     src={`/${chess.turn() === 'w' ? 'w' : 'b'}${piece}.png`}
-                                    className="w-9 h-9"
+                                    className="w-12 h-12"
                                 />
                             </button>
                         ))}
                     </div>
-                </div>
+                </dialog>
             )}
 
-            <div className="flex-1 flex flex-col justify-center items-center md:items-start text-center md:text-left gap-6">
-                <div>
-                    {!started && !isHost && (
+            {gameOver && <GameOver winner={winner} />}
+
+            {/* Sidebar Section */}
+            <div className="w-full md:w-[20%] max-w-[300px] flex flex-col gap-4 p-4 bg-gray-800 rounded-lg">
+                {!started && !isHost && (
+                    <div className="flex flex-col gap-4">
                         <Button
                             disabled={started}
                             onClick={() => {
@@ -208,81 +205,64 @@ const Game: React.FC = () => {
                         >
                             Play Online
                         </Button>
-                    )}
-
-                    {!started && !isHost && (
                         <Button disabled={started} onClick={handleCreateRoom}>
                             Play with Friend
                         </Button>
-                    )}
+                    </div>
+                )}
 
-                    {!started && isHost && (
-                        <div>
-                            <p>Your Room ID: {roomId}</p>
-                            <button
-                                className="px-12 md:px-20 py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg shadow-md transition duration-300 text-lg"
-                                onClick={() => navigator.clipboard.writeText(roomId!)}
-                            >
-                                Copy Room ID
-                            </button>
-                        </div>
-                    )}
-
-                    {!started && !isHost && (
-                        <div>
-                            <input
-                                type="text"
-                                placeholder="Enter Room ID"
-                                onChange={(e) => setRoomId(e.target.value)}
-                                value={roomId || ""}
-                                className="px-4 py-2 text-lg bg-gray-700 text-white rounded-md mb-4"
-                            />
-                            <Button disabled={started} onClick={() => handleJoinRoom(roomId!)}>
-                                Join Room
-                            </Button>
-                        </div>
-                    )}
-                </div>
-                {started && (
-                    <div className="moves-list mt-6 w-full max-h-[400px] overflow-y-auto bg-gray-800 p-4 rounded-lg shadow-md">
-                        <h3 className="text-lg font-bold mb-4 text-white">Moves</h3>
-                        <table className="w-full table-auto text-gray-300">
-                            <thead>
-                                <tr className="border-b border-gray-600">
-                                    <th className="text-left py-2">#</th>
-                                    <th className="text-left py-2">From</th>
-                                    <th className="text-left py-2">To</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {moves.map((move, index) => {
-                                    const isWhite = index % 2 === 0;
-                                    const [from, to] = move.split("-");
-
-                                    return (
-                                        <tr
-                                            key={index}
-                                            className={`py-1 ${isWhite ? "text-white" : "text-gray-400"
-                                                }`}
-                                        >
-                                            <td className="py-2">{index + 1}.</td>
-                                            <td className="py-2">{from}</td>
-                                            <td className="py-2">{to}</td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-
+                {!started && isHost && (
+                    <div className="flex flex-col gap-4">
+                        <p>Your Room ID: {roomId}</p>
                         <button
-                            className="mt-4 px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-lg shadow-md transition duration-300"
+                            className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg shadow-md transition duration-300"
+                            onClick={() => navigator.clipboard.writeText(roomId!)}
+                        >
+                            Copy Room ID
+                        </button>
+                    </div>
+                )}
+
+                {!started && !isHost && (
+                    <div className="flex flex-col gap-4">
+                        <input
+                            type="text"
+                            placeholder="Enter Room ID"
+                            onChange={(e) => setRoomId(e.target.value)}
+                            value={roomId || ""}
+                            className="px-4 py-2 text-lg bg-gray-700 text-white rounded-md"
+                        />
+                        <Button disabled={started} onClick={() => handleJoinRoom(roomId!)}>
+                            Join Room
+                        </Button>
+                    </div>
+                )}
+
+                {started && (
+                    <div className="flex-1 overflow-y-auto">
+                        <h3 className="text-lg font-bold mb-4 text-white">Moves</h3>
+                        <div className="flex flex-col gap-2">
+                            {moves.map((move, index) => {
+                                const [from, to] = move.split("-");
+                                return (
+                                    <div key={index} className="flex justify-between text-gray-300">
+                                        <span>{index + 1}.</span>
+                                        <span>{from}</span>
+                                        <span>{to}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <button
+                            className="mt-4 w-full px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-lg shadow-md transition duration-300"
                             onClick={downloadMovesAsPDF}
                         >
                             Download Moves as PDF
                         </button>
                     </div>
-
                 )}
+
+                {gameOver && <GameOver winner={winner} />}
             </div>
         </div>
     );
