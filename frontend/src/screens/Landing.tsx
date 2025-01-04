@@ -24,7 +24,7 @@ const Landing: React.FC = () => {
                     </p>
                 </div>
                 <div>
-                    <Button onClick={() => navigate("/game")}>
+                    <Button disabled={false} onClick={() => navigate("/game")}>
                         Play
                     </Button>
                 </div>
