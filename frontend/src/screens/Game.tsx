@@ -26,6 +26,7 @@ const Game: React.FC = () => {
     const [gameOver, setGameOver] = useState(false);
     const [winner, setWinner] = useState<string | null>(null);
     const [checkSquare, setCheckSquare] = useState<string | null>(null);
+    const [myColor, setMyColor] = useState<"w" | "b">("w");
 
     useEffect(() => {
         if (!socket) return;
@@ -36,6 +37,8 @@ const Game: React.FC = () => {
             switch (message.type) {
                 case INIT_GAME:
                     setStarted(true);
+                    const color = message.payload.color === 'white' ? 'w' : 'b';
+                    setMyColor(color);
                     setBoard(chess.board());
                     break;
 
@@ -165,6 +168,7 @@ const Game: React.FC = () => {
                         board={board}
                         setPromotion={handlePromotion}
                         checkSquare={checkSquare}
+                        myColor={myColor}
                     />
                 </div>
             </div>

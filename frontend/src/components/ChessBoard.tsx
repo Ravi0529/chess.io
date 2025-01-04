@@ -1,4 +1,4 @@
-import { Square, PieceSymbol, Color } from 'chess.js';
+import { Square, PieceSymbol, Color, Chess } from 'chess.js';
 import { useState } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { motion } from 'framer-motion';
@@ -12,75 +12,77 @@ type ChessBoardProps = {
     } | null)[][];
     socket: WebSocket | null;
     setBoard: any;
-    chess: any;
+    chess: Chess;
+    myColor: 'w' | 'b';
     setPromotion: (from: string, to: string) => void;
     checkSquare: String | null;
 };
 
-const ChessBoard: React.FC<ChessBoardProps> = ({ board, socket, setBoard, chess, setPromotion, checkSquare }) => {
+const ChessBoard: React.FC<ChessBoardProps> = ({ board, socket, setBoard, chess, setPromotion, checkSquare, myColor }) => {
     const [from, setFrom] = useState<null | Square>(null);
 
     return (
-        <div className="Chessboard">
-            {board.map((row, i) => (
-                <div key={i} className="flex">
-                    {row.map((square, j) => {
-                        const squareRepresentation = String.fromCharCode(97 + (j % 8)) + '' + (8 - i) as Square;
+        <div className={`relative ${myColor === 'b' ? 'flipped' : ''}`}>
+            <div className='grid grid-cols-8 grid-rows-8 w-[480px] h-[480px] relative'>
+                {board.flat().map((square, index) => {
+                    const i = Math.floor(index / 8);
+                    const j = index % 8;
+                    const squareRepresentation = String.fromCharCode(97 + (j % 8)) + '' + (8 - i) as Square;
 
-                        const isKingInCheck = squareRepresentation === checkSquare;
+                    const isKingInCheck = squareRepresentation === checkSquare;
 
-                        // Drop functionality for drag-and-drop
-                        const [{ isOver }, dropRef] = useDrop(() => ({
-                            accept: 'CHESS_PIECE',
-                            drop: (item: { from: Square }) => {
-                                handleMove(item.from, squareRepresentation);
-                            },
-                            collect: (monitor) => ({
-                                isOver: !!monitor.isOver(),
-                            }),
-                        }));
+                    // Drop functionality for drag-and-drop
+                    const [{ isOver }, dropRef] = useDrop(() => ({
+                        accept: 'CHESS_PIECE',
+                        drop: (item: { from: Square }) => {
+                            handleMove(item.from, squareRepresentation);
+                        },
+                        collect: (monitor) => ({
+                            isOver: !!monitor.isOver(),
+                        }),
+                    }));
 
-                        // Handle moves (shared logic for both drag and click)
-                        const handleMove = (fromSquare: Square, toSquare: Square) => {
-                            const moves = chess.moves({ square: fromSquare, verbose: true });
-                            const isPromotion = moves.some(
-                                (move: any) => move.flags.includes('p') && move.to === toSquare
-                            );
+                    // Handle moves (shared logic for both drag and click)
+                    const handleMove = (fromSquare: Square, toSquare: Square) => {
+                        const moves = chess.moves({ square: fromSquare, verbose: true });
+                        const isPromotion = moves.some(
+                            (move: any) => move.flags.includes('p') && move.to === toSquare
+                        );
 
-                            if (isPromotion) {
-                                setPromotion(fromSquare, toSquare); // Trigger promotion selection
-                            } else {
-                                if (fromSquare && toSquare) {
-                                    socket?.send(
-                                        JSON.stringify({
-                                            type: MOVE,
-                                            payload: {
-                                                move: { from: fromSquare, to: toSquare },
-                                            },
-                                        })
-                                    );
-                                    chess.move({ from: fromSquare, to: toSquare });
-                                    setBoard(chess.board());
-                                    setFrom(null); // Reset selection
-                                }
+                        if (isPromotion) {
+                            setPromotion(fromSquare, toSquare); // Trigger promotion selection
+                        } else {
+                            if (fromSquare && toSquare) {
+                                socket?.send(
+                                    JSON.stringify({
+                                        type: MOVE,
+                                        payload: {
+                                            move: { from: fromSquare, to: toSquare },
+                                        },
+                                    })
+                                );
+                                chess.move({ from: fromSquare, to: toSquare });
+                                setBoard(chess.board());
+                                setFrom(null); // Reset selection
                             }
-                        };
+                        }
+                    };
 
-                        return (
-                            <div
-                                key={j}
-                                ref={dropRef}
-                                onClick={() => {
-                                    if (!from) {
-                                        setFrom(squareRepresentation); // Set the piece to move
-                                    } else {
-                                        handleMove(from, squareRepresentation); // Handle the move
-                                    }
-                                }}
-                                className={`w-12 h-12 flex items-center justify-center ${
-                                    (i + j) % 2 === 0 ? 'bg-[#ebecd0]' : 'bg-[#779556]'
+                    return (
+                        <div
+                            key={index}
+                            ref={dropRef}
+                            onClick={() => {
+                                if (!from) {
+                                    setFrom(squareRepresentation); // Set the piece to move
+                                } else {
+                                    handleMove(from, squareRepresentation); // Handle the move
+                                }
+                            }}
+                            className={`w-full h-full flex items-center justify-center ${(i + j) % 2 === 0 ? 'bg-[#ebecd0]' : 'bg-[#779556]'
                                 } ${isKingInCheck ? 'bg-red-500' : ''} ${isOver ? 'bg-yellow-300' : ''}`}
-                            >
+                        >
+                            <div className={`${myColor === 'b' ? 'flipped' : ''}`}>
                                 {square ? (
                                     <ChessPiece
                                         square={square}
@@ -89,10 +91,10 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ board, socket, setBoard, chess,
                                     />
                                 ) : null}
                             </div>
-                        );
-                    })}
-                </div>
-            ))}
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 };
