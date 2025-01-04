@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development node dist/index.js",
     "build": "tsc",
-    "start": "cross-env NODE_ENV=production node dist/index.js"
+    "start": "cross-env NODE_ENV=production node backend/dist/index.js"
   },
   "keywords": [],
   "author": "",
