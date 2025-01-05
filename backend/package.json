@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development node dist/index.js",
-    "build": "npm install && tsc",
+    "build-frontend": "cd ../frontend && npm install && npm run build",
+    "build": "npm install && tsc && npm run build-frontend",
     "start": "cross-env NODE_ENV=production node dist/index.js"
   },
   "keywords": [],
