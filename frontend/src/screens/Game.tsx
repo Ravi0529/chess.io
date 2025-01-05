@@ -14,7 +14,7 @@ export const JOIN_ROOM = "join_room";
 
 const Game: React.FC = () => {
     const socket = useSocket();
-    const [chess, setChess] = useState(new Chess());
+    const [chess] = useState(new Chess());
     const [board, setBoard] = useState(chess.board());
     const [started, setStarted] = useState(false);
     const [roomId, setRoomId] = useState<string | null>(null);

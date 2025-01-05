@@ -188,7 +188,7 @@ const ChessPiece: React.FC<{
     };
     from: Square;
     setFrom: (square: Square) => void;
-}> = ({ square, from, setFrom }) => {
+}> = ({ square, from }) => {
     const [, dragRef] = useDrag(() => ({
         type: 'CHESS_PIECE',
         item: { from },
