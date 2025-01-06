@@ -4,7 +4,7 @@ An online multiplayer chess game built with React, Tailwind, TypeScript, Node.js
 
 ## Demo
 
-[Watch Demo Video](chess-game.mp4)
+[Watch Demo Video](chess-game.gif)
 
 ## Features
 
