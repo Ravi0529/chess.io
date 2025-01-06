@@ -36,3 +36,7 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Ignore all MP4 and GIF files
+*.mp4
+*.gif
