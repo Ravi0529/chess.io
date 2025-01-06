@@ -2,9 +2,7 @@
 
 An online multiplayer chess game built with React, Tailwind, TypeScript, Node.js, Express.js, and WebSockets, offering real-time gameplay with seamless connectivity.
 
-## Demo
-
-[Watch Demo Video](chess-game.gif)
+https://github.com/user-attachments/assets/5fdf094b-ae88-465c-9538-718ee20b0a8b
 
 ## Features
 
